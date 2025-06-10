@@ -1,4 +1,4 @@
-  **Author: Prince Chafah Forchu Sani**
+it  **Author: Prince Chafah Forchu Sani**
   
   [Profile](https://www.linkedin.com/in/prince-chafah-forchu-sani-691534158/)
   # KUBERNETES:
@@ -140,30 +140,90 @@ A **Pod** is the smallest and simplest unit of deployment in Kubernetes. It repr
 ### **Pod Structure**
 
 Here’s an example of a Pod definition in YAML:
+Here's a complete and **clearly explained Kubernetes YAML example** that:
 
+1. Deploys an `nginx` Pod using a **Deployment**
+2. Exposes it using a **Service**
+---
+### `nginx-pod.yaml`
 ```yaml
-apiVersion: v1
-kind: Pod
+apiVersion: v1                    # This is the API version for basic Kubernetes resources like Pods
+kind: Pod                         # The object type we're creating is a Pod
 metadata:
-  name: my-app-pod
+  name: nginx-pod                 # Name of the Pod
   labels:
-    app: my-app
+    app: nginx                    # Labels help identify and group this Pod
 spec:
-  containers:
-  - name: my-app-container
-    image: hilltopconsultancy/docker:v2
-    ports:
-    - containerPort: 80
+  containers:                     # List of containers in the Pod (even one container is in a list)
+    - name: nginx                 # Name of this container
+      image: nginx               # Docker image to use (nginx is publicly available on Docker Hub)
+      ports:
+        - containerPort: 80      # The port the container exposes
 ```
 
-#### Explanation:
-- **`apiVersion`**: Specifies the API version (`v1` for Pods).
-- **`kind`**: Identifies the resource type (`Pod`).
-- **`metadata`**: Contains metadata like the Pod’s name and labels.
-- **`spec`**: Specifies the Pod’s desired state.
-  - **`containers`**: Defines the containers in the Pod, their images, and configuration.
-  - **`ports`**: Specifies the ports the container exposes.
+### `nginx-deployment.yaml`
 
+```yaml
+apiVersion: apps/v1                # Specifies the version of the Kubernetes API to use for Deployment
+kind: Deployment                   # The type of object you're creating (Deployment manages Pods)
+metadata:
+  name: nginx-deployment           # Name of the Deployment
+  labels:
+    app: nginx                     # Labels help identify and group Kubernetes objects
+spec:
+  replicas: 2                      # How many nginx Pods you want
+  selector:
+    matchLabels:
+      app: nginx                   # Tells the Deployment to manage Pods with this label
+  template:                        # This defines the Pod template
+    metadata:
+      labels:
+        app: nginx                 # Labels applied to the Pods created
+    spec:
+      containers:                  # List of containers in the Pod (here, just one)
+        - name: nginx              # Name of the container
+          image: nginx             # Docker image to use
+          ports:
+            - containerPort: 80    # Port the container listens on
+```
+
+---
+
+### `nginx-service.yaml`
+
+```yaml
+apiVersion: v1                     # This time we use 'v1' for core resources like Service
+kind: Service                      # We're creating a Service to expose our app
+metadata:
+  name: nginx-service              # Name of the Service
+spec:
+  selector:
+    app: nginx                     # This tells the Service to target Pods with this label
+  ports:
+    - protocol: TCP                # Protocol used
+      port: 80                     # Port on the Service
+      targetPort: 80               # Port on the Pod the Service should forward to
+  type: ClusterIP                  # Type of Service (ClusterIP = internal-only access)
+```
+
+---
+
+##  Explanation of Key Components
+
+| **Component**     | **Explanation**                                                                                                                                        |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `apiVersion`      | The API group and version to use. For Deployments, it's `apps/v1`. For Services, it's `v1`. This ensures Kubernetes knows what features are supported. |
+| `kind`            | The type of Kubernetes object you're creating: `Deployment` or `Service`.                                                                              |
+| `metadata`        | Contains the name and optional labels for identifying the object.                                                                                      |
+| `spec`            | The desired state of the object. Each `kind` has a specific format for this.                                                                           |
+| `replicas`        | Number of Pod copies you want.                                                                                                                         |
+| `selector`        | Used to match Pods with specific labels. Helps controllers like `Deployment` or `Service` know which Pods to manage or expose.                         |
+| `template`        | Only in `Deployment`. It's a blueprint for creating Pods.                                                                                              |
+| `containers`      | A **list** (notice the `-`) of container definitions. Even if only one container is used, the YAML uses a list format.                                 |
+| `image`           | The container image to deploy (e.g., `nginx`).                                                                                                         |
+| `containerPort`   | Port that the app inside the container listens to.                                                                                                     |
+| `ports` (Service) | List of port rules for how to forward traffic.                                                                                                         |
+| `type` (Service)  | Defines how the Service is exposed: `ClusterIP`, `NodePort`, `LoadBalancer`, etc.                                                                      |
 ---
 
 ### **Pod Lifecycle**
@@ -252,76 +312,13 @@ Pods are often managed by higher-level Kubernetes resources:
    ```
 ---
 
-```bash
-source <(kubectl completion bash) # set up autocomplete in bash into the current shell, bash-completion package should be installed first.
-echo "source <(kubectl completion bash)" >> ~/.bashrc # add autocomplete permanently to your bash shell.
-alias k=kubectl
-complete -o default -F __start_kubectl k
-```
-```bash
-kubectl run nginx --image nginx
-```
-it creates a pod call nginx and also pulls the image nginx from a public docker repo 
-```yaml
-- apiVersion: # this is the version of the k8s API, it is mandatory Pod: v1 , service: v1 
-- #replicaSet: apps/v1 , Deployment: apps/v1. It is also a string value 
-- kind: # This refers to the type of object to be created such as Pod, ReplicaSet, Deployment, etc string
-- metadata: # This is data about the object such as name and labels. Metadata is a dictionary, it is indented
--   name: myapp #
--  labels: # It is a dictionary and can take any kind of key-value pair such as
--      app: myapp # It is a string
--      type: front-end
-note: you can only add names and labels under metadata or specifications from k8s 
-- spec: # This provides additional information about the object to create. it varies per object
--  containers:  list/array
-      - name: nginx-container  # first item in the list
-        image: hilltopconsultancy/docker:v2
-      - name:
-        image:
-```
-+  example:
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: hilltop-app
-  labels:
-    app: hilltop-app
-spec:
-  containers:
-  - name: hilltop
-    image: hilltopconsultancy/docker:v2
-    ports:
-    - containerPort: 8080
-
-```
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: hilltop-nodeport
-spec:
-  selector:
-    app: nginx
-  ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 80
-    nodePort: 30036
-
-```
-kubectl apply -f nginx-nodeport-service.yaml
-
-```sh
-kubectl apply -f nginx-clusterip-service.yaml
-```
 # Apply the configuration and access on the browser
 ```sh
 kubectl get pods -o wide
 kubectl get service -o wide
 ```
 
-+ Copy the public IPV4 Address og the pod node hosting the pod
++ Copy the public IPV4 Address of the pod node hosting the pod
 + Access the UI of the application using curl _**http://(public-ip):(NodePort)**_
 ```sh
 - kubectl apply/create -f <filename> #to create declaratively from a yml file
@@ -358,6 +355,9 @@ It is used to manage and maintain the desired state of an application running in
 ### **Structure of a Deployment**
 
 A Deployment is defined in a YAML or JSON file. Below is an example YAML file:
+
+
+### `deployment.yaml`
 
 ```yaml
 apiVersion: apps/v1
@@ -456,8 +456,9 @@ kubectl delete deployment devops-app-deployment
 
 ---
 
+
+### `deploy.yaml`
 ```yaml
-cat <<EOF | sudo tee deploy.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -477,10 +478,10 @@ spec:
         image: hilltopconsultancy/docker:v2
         ports:
         - containerPort: 8080
-EOF
 ```
+
+### `deploy-service.yaml`
 ```yaml
-cat <<EOF | sudo tee deploy-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -520,7 +521,8 @@ Controllers are the brain behind k8s, they monitor k8s objects and respond accor
 - replication controller is replaced by replicasets
 - it maintains the desired number of pods specified in your object definition file 
 
-```
+### `rs.yaml`
+```yaml
 apiVersion: apps/v1
 kind: ReplicaSet
 metadata:
@@ -548,6 +550,8 @@ spec:
 + replicasets requires a selector field | it is not a must
 + It helps the replica set define what pods fall under it although pod spec has already been mentioned in the spec
 + This is because it can manage pods that were not created to be managed by the rs
+
+`svc.yaml`
 ```yaml
 apiVersion: v1
 kind: Service
@@ -565,8 +569,10 @@ spec:
 ### AUTOSCALER
 https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/
 You can use a Horizontal Pod AutoScaler (HPA)
+
++ kubectl autoscale rs myapp-rc --cpu-percent=50 --min=1 --max=10
+### `autoscalaer.yaml`
 ```yaml
-#kubectl autoscale rs myapp-rc --cpu-percent=50 --min=1 --max=10
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
@@ -593,225 +599,311 @@ kubectl get hpa myapp-rc --watch
 k get pods 
 ```
 # 4.  *STATEFULSETS:*
+# Deploying a StatefulSet on AWS EKS with EBS CSI Driver and IRSA
 
-A **StatefulSet** is a Kubernetes controller that manages **stateful applications**. Unlike a **ReplicaSet**, which creates identical Pods, a StatefulSet ensures that each Pod has:
-1. A **stable, unique identity** (e.g., `pod-0`, `pod-1`, `pod-2`).
-2. A **persistent storage volume** that remains even after a Pod is deleted.
-3. A **controlled deployment and scaling process** (Pods are started and terminated in order).
+This guide walks you through the deployment of a Kubernetes `StatefulSet` on AWS EKS. It uses:
 
-## When to Use a StatefulSet?
-- Databases (e.g., **MySQL, PostgreSQL, MongoDB, Cassandra**) that require persistent storage.  
-- Distributed applications that need **stable network identities** (e.g., **Kafka, Zookeeper, Elasticsearch**).  
-- Applications that require **ordered scaling & rolling updates**.
+- AWS EBS volumes provisioned dynamically via the EBS CSI Driver
+- Kubernetes-native persistent volume claims (PVC)
+- An optional IRSA setup using IAM Roles for Service Accounts (STS) — though no AWS services are accessed directly
+- A custom Docker image: `hilltopconsultancy/globe:v1`
 
 ---
 
-## Example 1: Basic StatefulSet for Nginx
-This example deploys an **Nginx StatefulSet** where each Pod has a stable hostname and persistent storage.
+## What Is a StatefulSet?
+
+A `StatefulSet` manages stateful applications in Kubernetes. Unlike `Deployments`, it provides:
+
+- **Stable network identity** (e.g., `pod-0`, `pod-1`)
+- **Stable storage** (each pod gets its own volume)
+- **Ordered deployment and scaling**
+
+Use cases:
+- Databases (PostgreSQL, MongoDB)
+- Caches (Redis, Memcached)
+- Applications needing persistent local data
+
+---
+
+##  Prerequisites
+
+- EKS cluster (`eks-orange-prod`) running in region `eu-central-1`
+- `kubectl` and `eksctl` installed and configured
+- Node group with EC2 instances in subnets tagged for ELB and CSI
+- The following environment variables:
+
+```bash
+export CLUSTER_NAME=eks-orange-prod
+export REGION=eu-central-1
+export ACCOUNT_ID=<your-aws-account-id>
+````
+
+---
+
+## Step 1: Associate OIDC Provider with the EKS Cluster
+
+```bash
+eksctl utils associate-iam-oidc-provider \
+  --cluster $CLUSTER_NAME \
+  --region $REGION \
+  --approve
+```
+
+Verify:
+
+```bash
+aws eks describe-cluster \
+  --name $CLUSTER_NAME \
+  --region $REGION \
+  --query "cluster.identity.oidc.issuer" \
+  --output text
+```
+
+Save the ID at the end of the URL for later (e.g., `OIDC_ID=xxxxx`).
+
+---
+
+## Step 2: Set Up the EBS CSI Driver Role (IRSA)
+
+### 2.1 Download the IAM policy for EBS CSI
+
+```bash
+curl -O https://raw.githubusercontent.com/kubernetes-sigs/aws-ebs-csi-driver/master/docs/example-iam-policy.json
+```
+
+### 2.2 Create IAM policy
+
+```bash
+aws iam create-policy \
+  --policy-name AmazonEBSCSIDriverPolicy \
+  --policy-document file://example-iam-policy.json
+```
+
+### 2.3 Create IAM role for CSI driver
+
+Replace `<OIDC_ID>` below with your actual OIDC ID:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::<ACCOUNT_ID>:oidc-provider/oidc.eks.<REGION>.amazonaws.com/id/<OIDC_ID>"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "oidc.eks.<REGION>.amazonaws.com/id/<OIDC_ID>:sub": "system:serviceaccount:kube-system:ebs-csi-controller-sa"
+        }
+      }
+    }
+  ]
+}
+```
+
+Save as `ebs-trust-policy.json`, then run:
+
+```bash
+aws iam create-role \
+  --role-name AmazonEBSCSIDriverRole \
+  --assume-role-policy-document file://ebs-trust-policy.json
+
+aws iam attach-role-policy \
+  --role-name AmazonEBSCSIDriverRole \
+  --policy-arn arn:aws:iam::$ACCOUNT_ID:policy/AmazonEBSCSIDriverPolicy
+```
+
+### 2.4 Annotate the service account for the CSI driver
+
+```bash
+kubectl annotate serviceaccount ebs-csi-controller-sa \
+  -n kube-system \
+  eks.amazonaws.com/role-arn=arn:aws:iam::$ACCOUNT_ID:role/AmazonEBSCSIDriverRole
+```
+
+---
+
+## Step 3: Create a Kubernetes ServiceAccount
+
+We create a simple ServiceAccount for your StatefulSet (no AWS permissions required):
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: my-app-sa
+  namespace: default
+```
+
+Save as `serviceaccount.yaml` and apply:
+
+```bash
+kubectl apply -f serviceaccount.yaml
+```
+
+---
+
+## Step 4: Create the gp3 StorageClass
+
+Create a new `gp3` storage class for EBS:
+
+```yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gp3
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp3
+  fsType: ext4
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+```
+
+Save as `gp3-storageclass.yaml` and apply:
+
+```bash
+kubectl apply -f gp3-storageclass.yaml
+```
+
+---
+
+## Step 5: Create a Headless Service for StatefulSet
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: globe
+spec:
+  clusterIP: None
+  selector:
+    app: globe
+  ports:
+    - port: 80
+```
+
+Save as `headless-svc.yaml` and apply:
+
+```bash
+kubectl apply -f headless-svc.yaml
+```
+
+---
+
+##  Step 6: Deploy the StatefulSet
 
 ```yaml
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: nginx-statefulset
+  name: web
 spec:
-  serviceName: "nginx"
-  replicas: 3
+  serviceName: "globe"
+  replicas: 1
   selector:
     matchLabels:
-      app: nginx
+      app: globe
   template:
     metadata:
       labels:
-        app: nginx
+        app: globe
     spec:
+      serviceAccountName: my-app-sa
       containers:
-        - name: nginx
-          image: nginx:latest
+        - name: globe
+          image: hilltopconsultancy/globe:v1
           ports:
             - containerPort: 80
           volumeMounts:
-            - name: nginx-storage
-              mountPath: /usr/share/nginx/html  # Persistent storage mount
+            - name: www
+              mountPath: /usr/share/nginx/html
   volumeClaimTemplates:
     - metadata:
-        name: nginx-storage
+        name: www
       spec:
         accessModes: ["ReadWriteOnce"]
+        storageClassName: gp3
         resources:
           requests:
-            storage: 1Gi  # Persistent storage size
+            storage: 1Gi
 ```
 
-### What Happens?
-- **Pods get stable names:** `nginx-0`, `nginx-1`, `nginx-2`.
-- **Each Pod gets a persistent volume** (`nginx-storage`).
-- **Scaling happens in order:** `nginx-0` starts first, then `nginx-1`, etc.
-- **If a Pod crashes, it is replaced with the same identity**.
+Save as `statefulset.yaml` and apply:
 
----
-
-## Example 2: StatefulSet for MySQL Database
-This StatefulSet **deploys a MySQL database** with persistent storage.
-
-```yaml
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: mysql-statefulset
-spec:
-  serviceName: "mysql"
-  replicas: 3 
-  selector:
-    matchLabels:
-      app: mysql
-  template:
-    metadata:
-      labels:
-        app: mysql
-    spec:
-      containers:
-        - name: mysql
-          image: mysql:5.7
-          env:
-            - name: MYSQL_ROOT_PASSWORD
-              value: "mypassword"
-          ports:
-            - containerPort: 3306
-          volumeMounts:
-            - name: mysql-storage
-              mountPath: /var/lib/mysql
-  volumeClaimTemplates:
-    - metadata:
-        name: mysql-storage
-      spec:
-        accessModes: ["ReadWriteOnce"]
-        resources:
-          requests:
-            storage: 5Gi  # Persistent storage for MySQL
-```
-
-### What Happens?
-- **Pods get stable identities:** `mysql-0`, `mysql-1`, `mysql-2`.
-- **Each MySQL Pod gets a unique storage volume** (so data is not lost if a Pod is deleted).
-- **Pods restart in sequence:** If `mysql-0` is down, Kubernetes restores it first before moving to `mysql-1`.
----
-
-## ** How to Deploy a StatefulSet**
-1 **Apply the StatefulSet**  
 ```bash
 kubectl apply -f statefulset.yaml
 ```
 
-2 **Check the StatefulSet**  
-```bash
-kubectl get statefulsets
-```
+---
 
-3 **Check the Pods**  
-```bash
-kubectl get pods -l app=nginx
-```
+##  Step 7: Verify Deployment
 
-4 **Check Persistent Volumes**  
+Check status:
+
 ```bash
+kubectl get pods
 kubectl get pvc
+kubectl describe pod web-0
 ```
 
----
+Expected:
 
-## Key Differences: StatefulSet vs. ReplicaSet
-| Feature        | StatefulSet | ReplicaSet |
-|---------------|------------|------------|
-| Pod Identity  | Unique, stable names (e.g., `pod-0`, `pod-1`) | Randomly assigned names |
-| Scaling       | Ordered (first `pod-0`, then `pod-1`) | All Pods created/deleted at once |
-| Storage       | Persistent storage for each Pod | Shared storage, ephemeral |
-| Use Case      | Databases, distributed systems | Stateless applications, web services |
+* Pod `web-0` is running
+* PVC `www-web-0` is `Bound`
+* EBS volume created and attached automatically
 
 ---
-## When to Use a StatefulSet?
-**Use StatefulSet when your application needs stable identities and persistent storage** (e.g., databases, message queues, distributed systems).  
-**Use ReplicaSet/Deployment for stateless apps** where Pod identity doesn’t matter.
 
+##  **2. DaemonSet**
 
-# 5. *DEAMONSETS:*
+###  **Definition:**
 
-+ Deamonsets are like replicasets which help you run one instance of pods, but it runs one copy of your pod on every node on the cluster.
-+ The deamonset ensures that one copy of the pod is always running on every node in the cluster.
-+ A use case is if you are deploying a log collecting or monitoring agent.
-+ objects like the kube-proxy and network use deamonsets because they have to run on every node.
+A **DaemonSet** ensures that a pod runs on **every node** (or a selected group of nodes) in the cluster. It's used for **node-level services** like monitoring agents or log shippers.
+
+Every time a new node joins the cluster, the DaemonSet automatically adds the pod to it.
+
+---
+
+###  **Use Case:**
+
+Used for **background services** that must run on all nodes, such as:
+
+* Monitoring (e.g., Prometheus Node Exporter)
+* Log collection (e.g., Fluentd, Filebeat)
+* Security tools (e.g., Falco)
+* CSI storage drivers (e.g., AWS EBS CSI)
+
+---
+
+###  **DaemonSet Example Using Prometheus Node Exporter**
+
 ```yaml
-cat <<EOF | sudo tee ds-deploy.yaml
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: fluentd-elasticsearch
-  namespace: kube-system
+  name: node-exporter
   labels:
-    k8s-app: fluentd-logging
+    app: node-exporter
 spec:
   selector:
     matchLabels:
-      name: fluentd-elasticsearch
+      app: node-exporter
   template:
     metadata:
       labels:
-        name: fluentd-elasticsearch
+        app: node-exporter
     spec:
-      tolerations:
-      # These tolerations are to have the daemonset runnable on control plane nodes
-      # remove them if your control plane nodes should not run pods
-      - key: node-role.kubernetes.io/control-plane
-        operator: Exists
-        effect: NoSchedule
-      - key: node-role.kubernetes.io/master
-        operator: Exists
-        effect: NoSchedule
       containers:
-      - name: fluentd-elasticsearch
-        image: quay.io/fluentd_elasticsearch/fluentd:v2.5.2
-        resources:
-          limits:
-            memory: 200Mi
-          requests:
-            cpu: 100m
-            memory: 200Mi
-        volumeMounts:
-        - name: varlog
-          mountPath: /var/log
-      #it may be desirable to set a high priority class to ensure that a DaemonSet Pod
-      #preempts running Pods
-      #priorityClassName: important
-      terminationGracePeriodSeconds: 30
-      volumes:
-      - name: varlog
-        hostPath:
-          path: /var/log
-EOF
+        - name: node-exporter
+          image: prom/node-exporter
+          ports:
+            - containerPort: 9100
+              name: metrics
 ```
-```sh
-k create -f <filename>
-kubectl get deamonsets 
-kubectl describe deamonsets
-kubectl get daemonsets --all-namespaces 
-```
-- How do you get pods to be scheduled on every node?
-- one approach is to use the node name to bypass the scheduler and place a pod on a desired node.
-  
-
-# Labels and Selectors:
-+ Labels are used as filters for ReplicaSet. Labels allow the rs to know what pod in the cluster or nodes 
-placed under its management since there could be multiple pods running in the cluster.
-+ The template definition section is required in every rs, even for pods that were created before the rs 
-+ This is because if the pod fails and is to be recreated, it will need the spec to recreate it
-
-- if you want to scale from 3 to 6 replicas, update the replicas to 6 and run
-```sh
- kubectl replace -f <filename>
- kubectl scale --replicas=6 <filename>
- kubectl scale -- replicas replicaset name 
- kubectl edit pod/rs/rc/deploy <podname>
-```
+---
 
 # SERVICE DISCOVERY
 https://kubernetes.io/docs/concepts/services-networking/service/
@@ -833,8 +925,8 @@ https://kubernetes.io/docs/concepts/services-networking/service/
 
 A. **Deployment Configuration:**
 
+ `svc-deploy.yaml`
 ```yaml
-cat <<EOF | sudo tee svc-deploy.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -854,7 +946,6 @@ spec:
         image: nginx:latest
         ports:
         - containerPort: 80
-EOF
 ```
 
 ### 1. ClusterIP Service
@@ -866,8 +957,8 @@ EOF
 
 1. Create the service definition:
 
+ `svc-deploy.yaml`
 ```yaml
-cat <<EOF | sudo tee clusterip-svc.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -878,8 +969,8 @@ spec:
     app: nginx
   ports:
     - port: 80
-      targetPort: 80
-EOF
+  nodePort: 31000
+
 ```
 
 Save this as `clusterip-svc.yaml` and deploy it:
@@ -919,7 +1010,7 @@ kubectl delete svc nginx-clusterip
 1. Create the service definition:
 
 ```yaml
-cat <<EOF | sudo tee nodeport-service.yaml
+ `svc-deploy.yaml`
 apiVersion: v1
 kind: Service
 metadata:
@@ -932,7 +1023,6 @@ spec:
     - port: 80
       targetPort: 80
       nodePort: 30007
-EOF
 ```
 
 Save this as `nodeport-service.yaml` and deploy it:
@@ -964,54 +1054,382 @@ kubectl delete svc nginx-nodeport
 ### 3. LoadBalancer Service
 
 **Definition and Use Case:**
-- **LoadBalancer** exposes the service externally through a cloud provider’s load balancer. This service type is most beneficial when running on a cloud platform that supports automatic load balancers, providing a way to distribute traffic across several instances of the application.
+- **LoadBalancer** exposes the service externally through a cloud provider’s load balancer.
+- This service type is most beneficial when running on a cloud platform that supports automatic load balancers, providing a way to distribute traffic across several instances of the application.
 
 **Deploy LoadBalancer Service:**
+# AWS Application Load Balancer (ALB) Installation Guide for EKS
 
-1. Create the service definition:
+## Prerequisites
+- AWS CLI configured with appropriate permissions
+- `eksctl` installed
+- `kubectl` installed and configured to access your EKS cluster
+- Helm installed
+- An existing EKS cluster
 
+### 1. Download IAM Policy
+Download the IAM policy required for the AWS Load Balancer Controller:
+```bash
+curl -O https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.11.0/docs/install/iam_policy.json
+```
+
+### 2. Create IAM Policy
+Create the IAM policy in your AWS account:
+```bash
+aws iam create-policy \
+  --policy-name AWSLoadBalancerControllerIAMPolicy \
+  --policy-document file://iam_policy.json
+```
+
+### 3. Associate IAM OIDC Provider
+Associate the IAM OIDC provider for your cluster:
+```bash
+eksctl utils associate-iam-oidc-provider \
+  --region <Region> \
+  --cluster <ClusterName>\
+  --approve
+```
+
+### 4. Create IAM Service Account
+Create an IAM service account for the controller:
+```bash
+eksctl create iamserviceaccount \
+  --region <Region> \
+  --cluster <ClusterName> \
+  --namespace kube-system \
+  --name aws-load-balancer-controller \
+  --role-name AmazonEKSLoadBalancerController \
+  --attach-policy-arn arn:aws:iam::0504516180:policy/AWSLoadBalancerControllerIAMPolicy \
+  --approve
+```
+
+### 5. Add Helm Repository
+Add the EKS Helm repository:
+```bash
+helm repo add eks https://aws.github.io/eks-charts
+helm repo update
+```
+
+### 6. Install AWS Load Balancer Controller
+Install the controller using Helm:
+```bash
+helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
+  -n kube-system \
+  --set clusterName=<ClusterName> \
+  --set serviceAccount.create=false \
+  --set serviceAccount.name=aws-load-balancer-controller \
+  --set region=<Region> \
+  --set vpcId=vpc-05bd534e99630eca3 \
+  --version 1.13.0
+```
+
+### 7. Apply CRDs
+Apply the Custom Resource Definitions:
+```bash
+curl -O https://raw.githubusercontent.com/aws/eks-charts/master/stable/aws-load-balancer-controller/crds/crds.yaml
+kubectl apply -f crds.yaml
+```
+
+### 8. Verify Installation
+Verify the controller is running:
+```bash
+kubectl get deployment -n kube-system aws-load-balancer-controller
+```
+
+## Deploying a Sample Application with LoadBalancer Service
+
+### 1. Create a Sample Deployment
+Create a deployment file `sample-deployment.yaml`:
 ```yaml
-cat <<EOF | sudo tee loadbalancer-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: color-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: color-app
+  template:
+    metadata:
+      labels:
+        app: color-app
+    spec:
+      containers:
+      - name: color-app
+        image: hilltopconsultancy/colorapp:orange
+        ports:
+        - containerPort: 8080
+```
+
+Apply the deployment:
+```bash
+kubectl apply -f sample-deployment.yaml
+```
+
+### 2. Create a LoadBalancer Service
+Create a service file `loadbalancer-service.yaml`:
+```yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: nginx-loadbalancer
+  name: color-service
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: external
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
 spec:
-  type: LoadBalancer
   selector:
-    app: nginx
+    app: color-app
   ports:
-    - port: 80
-      targetPort: 80
-EOF
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: LoadBalancer
 ```
 
-Save this as `loadbalancer-service.yaml` and deploy it:
-
+Apply the service:
 ```bash
 kubectl apply -f loadbalancer-service.yaml
 ```
 
-**Accessing the Application:**
+## Testing the Load Balancer
 
-- Once deployed, the LoadBalancer service will provision an external IP:
-
+### 1. Check Service Status
 ```bash
-kubectl get svc nginx-loadbalancer
+kubectl get svc sample-service
 ```
 
-- Use the external IP to access Nginx:
+Wait until the `EXTERNAL-IP` column shows a DNS name (this may take a few minutes).
 
+### 2. Access the Application
+Once the LoadBalancer is provisioned, you can access it using the provided DNS name:
 ```bash
-curl http://<External_IP>
+curl http://<LOAD_BALANCER_DNS>
 ```
 
-**Delete the LoadBalancer Service:**
+You should see the default COLOR welcome page.
 
+### 3. Verify Load Balancer in AWS Console
+1. Go to the AWS Management Console
+2. Navigate to EC2 > Load Balancers
+3. You should see a new load balancer created for your service
+
+## Cleanup
+
+To remove the resources:
 ```bash
-kubectl delete svc nginx-loadbalancer
+kubectl delete -f loadbalancer-service.yaml
+kubectl delete -f sample-deployment.yaml
+helm uninstall aws-load-balancer-controller -n kube-system
 ```
 
+## Troubleshooting
+
+If the LoadBalancer is not being created:
+1. Check controller logs:
+   ```bash
+   kubectl logs -n kube-system deployment/aws-load-balancer-controller
+   ```
+2. Verify IAM permissions
+3. Check for errors in the service events:
+   ```bash
+   kubectl describe svc sample-service
+   ```
+---
+# **AWS ALB Ingress with TLS: Complete Step-by-Step Guide**
+
+## **1. Definitions**
+### **What is an Ingress?**
+An Ingress is a Kubernetes resource that manages external access to HTTP/HTTPS services in a cluster. It provides:
+- **Load balancing** (distributes traffic to pods)
+- **SSL/TLS termination** (HTTPS support)
+- **Host-based routing** (`app1.domain.com`, `app2.domain.com`)
+- **Path-based routing** (`/api`, `/web`)
+
+### **What is an Ingress Controller?**
+The **AWS Load Balancer Controller** is required to implement Ingress rules by provisioning an Application Load Balancer (ALB). We already installed this in previous steps(alb).
+
+---
+
+## **2. AWS Console Setup (Certificate + Domain)**
+
+### **Step 1: Create TLS Certificate in AWS ACM**
+1. Go to **AWS ACM Console** (https://console.aws.amazon.com/acm)
+2. Click **Request certificate**
+3. Select **Public certificate**
+4. Add domain names:
+   - **Fully qualified Domain:** `colorapp.hilltopdevops.com`
+   - (Optional) Add wildcard: `*.hilltopdevops.com`
+5. Choose **DNS validation**
+6. Click **Request**
+7. In certificate list, select your new certificate
+8. Click **Create records in Route53** (AWS will auto-create validation records)
+9. Wait 5-30 minutes for status to change from **Pending validation** → **Issued**
+
+---
+
+## **3. Kubernetes Deployment**
+
+### **Step 3: Deploy Application**
+```yaml
+# color-app-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: color-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: color-app
+  template:
+    metadata:
+      labels:
+        app: color-app
+    spec:
+      containers:
+      - name: color-app
+        image: hilltopconsultancy/globe:v1
+        ports:
+        - containerPort: 8080
+        env:
+        - name: COLOR
+          value: "orange"
+```
+
+```bash
+kubectl apply -f color-app-deployment.yaml
+```
+
+### **Step 4: Create ClusterIP Service**
+```yaml
+# color-app-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: color-app-service
+spec:
+  type: ClusterIP
+  selector:
+    app: color-app
+  ports:
+    - port: 80
+      targetPort: 8080
+```
+
+```bash
+kubectl apply -f color-app-service.yaml
+```
+
+### **Step 5: Create Ingress Resource**
+```yaml
+# color-app-ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: color-app-ingress
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-central-1:050451396180:certificate/YOUR_CERT_ID
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+spec:
+  ingressClassName: alb
+  rules:
+  - host: colorapp.hilltopdevops.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: color-app-service
+            port:
+              number: 80
+```
+
+```bash
+kubectl apply -f color-app-ingress.yaml
+```
+
+---
+### **Step 2: Create Subdomain in Route53**
+1. Go to **Route53 Console** (https://console.aws.amazon.com/route53)
+2. Select your hosted zone: **hilltopdevops.com**
+3. Click **Create record**
+4. Configure:
+   - **Record name:** `colorapp`
+   - **Record type:** `A`
+   - **Alias:** Enable
+   - **Route traffic to:** 
+     - Select **Alias to Application and Classic Load Balancer**
+     - Choose region: **eu-north-1**
+     - (We'll select the ALB after creating the Ingress)
+5. Click **Create records**
+
+---
+## **4. Final Configuration in AWS Console**
+
+### **Step 6: Update Route53 ALB Target**
+1. Get ALB DNS name:
+   ```bash
+   kubectl get ingress color-app-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+   ```
+   Example output: `k8s-default-colorapp-ingress-xxxx.elb.eu-central-1.amazonaws.com`
+
+2. Go back to **Route53 Console** → **hilltopdevops.com**
+3. Edit the `colorapp` A record:
+   - Update **Alias target** to your ALB DNS name
+   - Save changes
+
+---
+
+## **5. Verification**
+
+### **Step 7: Test Your Setup**
+1. Wait 2-5 minutes for DNS propagation
+2. Access your application:
+   ```bash
+   curl -v https://colorapp.hilltopdevops.com
+   ```
+3. Verify:
+   - HTTPS works (padlock icon in browser)
+   - HTTP → HTTPS redirect works:
+     ```bash
+     curl -v http://colorapp.hilltopdevops.com
+     ```
+   - Should return `301 Moved Permanently` to HTTPS
+
+---
+
+## **Troubleshooting**
+- **Certificate not validating?**
+  - Check ACM console for validation status
+  - Verify CNAME records exist in Route53
+- **ALB not created?**
+  ```bash
+  kubectl describe ingress color-app-ingress
+  ```
+  Look for errors in events
+- **DNS not resolving?**
+  ```bash
+  dig colorapp.hilltopdevops.com
+  ```
+  Should return ALB DNS name
+
+---
+
+## **Cleanup**
+```bash
+kubectl delete -f color-app-ingress.yaml
+kubectl delete -f color-app-service.yaml
+kubectl delete -f color-app-deployment.yaml
+# Delete ACM certificate and Route53 records via AWS Console if no longer needed
+```
+
+---
 # STORAGE:
 ## VOLUMES:
 Files in a container are ephemeral and they will be lost once the container fails or is stopped
@@ -1019,106 +1437,250 @@ The container is recreated in a clean state and all volumes I lost
 + Therefore persisting volumes are essential in k8s as they persistent volumes exist beyond the lifetime of a pod.
 + These persistent volumes can be a directory that can be used by Pods or shared by containers running in a Pod
 
-## Types of Volumes:
-### 1. *ConfigMaps:*
+# Kubernetes ConfigMaps Guide
 
-+ A ConfigMap provides a way to inject configuration data into pods.
-+ This is a way of managing environmental variables in k8s. you can manually inject this variable by passing them as env.
-+ The most critical role that ConfigMaps play is making applications portable by separating the application code from configuration settings.
-+ This separation makes it possible to efficiently migrate from a development environment to a test environment and, eventually, a production environment.
-+ But with many def files that require this variable, then you need to create them as a separate object in k8s 
-and simply reference them in your object definition file. This can be done using ConfigMaps and Secrets.
+Based on [Kubernetes Official Documentation](https://kubernetes.io/docs/concepts/configuration/configmap/)
 
-ConfigMaps are used to pass configuration data in the form of key-value pairs in k8s and then injected into pods.
-```sh
-kubectl create configmap <ConfigName> --from-literal=APP_COLOR=blue \
-                                   --from-literal=APP_MODE=prod  
-                   OR 
-kubectl create configmap app-config --from-file=<pathtofile>
+## Overview
+A ConfigMap is an API object used to store non-confidential data in key-value pairs. Pods can consume ConfigMaps as environment variables, command-line arguments, or as configuration files in a volume. ConfigMaps allow you to decouple environment-specific configuration from your container images, making your applications easily portable.
+
+## Key Features
+- Stores configuration data separately from application code
+- Can be mounted as data volumes or exposed as environment variables
+- Namespace-scoped (exist within a single namespace)
+- Can be updated without rebuilding images
+- Supports UTF-8 strings up to 1MiB in size
+
+## Creating ConfigMaps
+
+### 1. From Literal Values
+```bash
+kubectl create configmap app-config \
+  --from-literal=COLOR=green \
+  --from-literal=COUNTRY=Cameroon \
+  --from-literal=LOG_LEVEL=debug \
+  --from-literal=CALENDAR=false
 ```
+
+### 2. From YAML File
+Create `app-config.yaml`:
 ```yaml
-cat <<EOF | sudo tee cm.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: webapp-color-cm
+  name: app-config
 data:
-  app-color: green
-EOF
+  COLOR: red
+  CALENDER: true
+  LOG_LEVEL: debug
+  COUNTRY: Cameroon
 ```
-kubectl get configmaps
 
+Apply the ConfigMap:
+```bash
+kubectl apply -f app-config.yaml
+```
 
-to inject the  env to the running container, add the envFrom section under the spec section  
-```sh
-cat <<EOF | sudo tee deploy-cm.yaml
+## Using ConfigMaps in Pods
+
+### Example 1: Using All Environment Variables from ConfigMap
+
+```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  creationTimestamp: null
-  labels:
-    app: dep-web-color
-  name: dep-web-color
+  name: colorapp-deployment
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
-      app: dep-web-color
-  strategy: {}
+      app: colorapp
   template:
     metadata:
-      creationTimestamp: null
       labels:
-        app: dep-web-color
+        app: colorapp
     spec:
       containers:
-      - image: kodekloud/webapp-color:latest
-        name: webapp-color
-        imagePullPolicy: IfNotPresent
-        env:
-          - name: APP_COLOR
-            valueFrom:
-              configMap:
-                name: webapp-color-cm
-EOF
+      - name: colorapp
+        image: hilltopconsultancy/globe:v1
+        ports:
+        - containerPort: 8080
+        envFrom:
+          - configMapRef:
+              name: app-config
 ```
-to create a resource, use kubectl create -f <filename>
 
-```sh
-cat <<EOF | sudo tee svc-cm.yaml
+### Example 2: Using Specific Environment Variables from ConfigMap
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: colorapp-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: colorapp
+  template:
+    metadata:
+      labels:
+        app: colorapp
+    spec:
+      containers:
+      - name: colorapp
+        image: hilltopconsultancy/globe:v1
+        ports:
+        - containerPort: 8080
+        env:
+          - name: COLOR
+            valueFrom:
+              configMapKeyRef:
+                name: app-config
+                key: COLOR
+          - name: LOG_LEVEL
+            valueFrom:
+              configMapKeyRef:
+                name: app-config
+                key: LOG_LEVEL
+```
+
+### Example 3: Using ConfigMap as Volume
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: colorapp-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: colorapp
+  template:
+    metadata:
+      labels:
+        app: colorapp
+    spec:
+      containers:
+      - name: colorapp
+        image: hilltopconsultancy/colorapp:orange
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/config
+      volumes:
+      - name: config-volume
+        configMap:
+          name: app-config
+```
+
+## Complete Deployment Example
+
+1. Create the ConfigMap (`app-config.yaml`):
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  COLOR: red
+  ENVIRONMENT: production
+  LOG_LEVEL: debug
+  APP_NAME: ColorApp
+```
+
+2. Create the Deployment (`colorapp-deployment.yaml`):
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: colorapp-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: colorapp
+  template:
+    metadata:
+      labels:
+        app: colorapp
+    spec:
+      containers:
+      - name: colorapp
+        image: hilltopconsultancy/globe:v1
+        ports:
+        - containerPort: 8080
+        envFrom:
+          - configMapRef:
+              name: app-config
+```
+
+3. Create the Service (`colorapp-service.yaml`):
+```yaml
 apiVersion: v1
 kind: Service
 metadata:
-  creationTimestamp: null
-  labels:
-    run: webapp-color
-  name: webapp-color
+  name: colorapp-service
 spec:
-  ports:
-  - port: 8080
-    protocol: TCP
-    targetPort: 8080
-    nodePort: 30080
-  selector:
-    run: webapp-color
   type: NodePort
-EOF
+  selector:
+    app: colorapp
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+      nodePort: 30080
 ```
-You can also ref a single env from a configmap 
-```sh
-env:
-  - name: APP_COLOR
-  valueFrom:
-    configMapKeyRef:
-      name: webapp-color-cm
-      key: app-color
+
+## Deploying the Application
+
+```bash
+kubectl apply -f app-config.yaml
+kubectl apply -f colorapp-deployment.yaml
+kubectl apply -f colorapp-service.yaml
 ```
-You can also inject it as a volume
-```sh
-volumes:
-- name: app-config-volume
-  ConfigMap:
-    name: webapp-color-cm
+
+## Verifying Configuration
+
+1. Check environment variables in a pod:
+```bash
+kubectl exec -it pod/colorapp -- sh -c "printenv"
+```
+
+2. Check the application logs:
+```bash
+kubectl logs -l app=colorapp
+```
+
+## Updating ConfigMaps
+
+1. Edit the ConfigMap:
+```bash
+kubectl edit configmap app-config
+```
+
+2. Update the COLOR value to a different color (e.g., blue)
+
+3. Restart the pods to pick up changes:
+```bash
+kubectl rollout restart deployment colorapp-deployment
+```
+
+## Best Practices
+- ConfigMaps should be used for non-sensitive configuration only
+- ConfigMaps are namespace-scoped
+- Consider using immutable ConfigMaps for configurations that don't need updates
+- The total size of a ConfigMap must be less than 1MiB
+- When mounted as volumes, ConfigMap updates are eventually consistent
+
+## Cleanup
+
+```bash
+kubectl delete -f colorapp-service.yaml
+kubectl delete -f colorapp-deployment.yaml
+kubectl delete -f app-config.yaml
 ```
 ### 2. *emptyDir:*
 
@@ -1178,134 +1740,252 @@ spec:
 ```
 ### 4. *SECRETS:*
 
-Secrets just like configmaps are used to store configuration data which can be injected into an object in k8s.
-Unlike configmaps, secrets store sensitive data such as passwords and keys in an encoded manner.
-You can create a secret imperatively by using:
-```sh
-  kubectl create secret generic <secretName> app-secret --from-literal=DB_Host=mysql   \
-                                                        --from-literal=DB_User=root
+Kubernetes `Secrets` let you store **sensitive information** such as:
+
+- Database passwords
+- API tokens
+- SSH keys
+
+Unlike ConfigMaps, Secrets are **base64-encoded** and intended to keep sensitive data separate from your application code.
+
+---
+
+##  Use Cases
+
+You should use Secrets when:
+- You want to **inject credentials** or API keys into your containers.
+- You don’t want to hardcode sensitive values into container images or YAML manifests.
+- You want better control over **secret management and auditing**.
+
+---
+##  How to Create a Secret
+
+###  Option A: Imperatively from CLI
+
+```bash
+kubectl create secret generic app-secret \
+  --from-literal=DB_HOST=mysql \
+  --from-literal=DB_USER=root \
+  --from-literal=DB_PASSWORD=secret123
+````
+
+###  Option B: Declaratively from a YAML file
+
+First, encode values with `base64`:
+
+```bash
+echo -n 'mysql' | base64        # Output: bXlzcWw=
+echo -n 'root' | base64         # Output: cm9vdA==
+echo -n 'secret123' | base64    # Output: c2VjcmV0MTIz
 ```
-    You can ref the secret from a file using the --from-file=app-secret
-    For a declarative approach
-```sh
+
+Then create `secret.yaml`:
+
+```yaml
 apiVersion: v1
 kind: Secret
 metadata:
   name: app-secret
+type: Opaque
 data:
-  DB_Host: mysql
-  DB_User: root 
-  DB_Password: password
+  DB_HOST: bXlzcWw=
+  DB_USER: cm9vdA==
+  DB_PASSWORD: c2VjcmV0MTIz
 ```
-It is however not advisable to pass your secrets in plain text as if defeats the entire purpose.
-To convert the data from plaintext to an encoded format, on a Linux system, use the  
-```sh 
-echo -n 'mysql' | base64
-echo -n 'root' | base64
-echo -n 'password' | base64
+
+Apply it:
+
+```bash
+kubectl apply -f secret.yaml
 ```
-```sh
-apiVersion: v1
-kind: Secret
-metadata:
-  name: app-secret
-data:
-  DB_Host: sjhdvdv=
-  DB_User: fnvjsf== 
-  DB_Password: sffvnhri
+
+---
+
+##  How to View Secrets
+
+```bash
+kubectl get secret app-secret
+kubectl describe secret app-secret
+kubectl get secret app-secret -o yaml
 ```
-copy the corresponding encoded values and replace and inject them into the file.
-```sh
-kubectl get secrets app-secret
-kubectl describe secrets
-kubectl get secrets app-secret -o yaml
+
+To decode values:
+
+```bash
+echo -n 'c2VjcmV0MTIz' | base64 --decode
 ```
-+ to decode encoded values use the  
-```sh
-echo -n 'djvfjdo=' | base64 --decode
-```
-+ To inject encoded values into the pod object, use the 
-```sh
+
+---
+
+## Deploy a Test Application that Reads Secrets
+
+We’ll deploy a simple app that prints secret values to logs on startup.
+
+###  `pod-with-secret.yaml`
+
+```yaml
 apiVersion: v1
 kind: Pod
 metadata:
-  name: nginx
+  name: secret-demo
 spec:
+  serviceAccountName: default
   containers:
-  - image: nginx
-    name: nginx
-    ports:
-      - containerPort: 8080
-    envFrom:
-      - secretRef:
-        name: app-secret
+    - name: demo
+      image: busybox
+      command: [ "/bin/sh", "-c" ]
+      args:
+        - echo "Connecting to DB with $DB_USER@$DB_HOST"; echo "Password: $DB_PASSWORD"; sleep 3600
+      envFrom:
+        - secretRef:
+            name: app-secret
 ```
-+ Secrets are not encrypted but rather encoded and can be decoded using the same method. 
-+ Therefore, do not upload your secret files to the GitHub repo.
 
-You can enable encryption at rest:
-```sh
-kubectl get secrets --all-namespaces -o jason | kubectl replace -f -
+Deploy it:
+
+```bash
+kubectl apply -f pod-with-secret.yaml
 ```
-https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/
 
-## i. *PersistentVolume (PV)*
+---
 
-+ A PersistentVolume (PV) is a piece of storage in the cluster that has been provisioned by an administrator
-+ PVs are volume plugins like Volumes, but have a lifecycle independent of any individual Pod that uses the PV
-```yaml
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: task-pv-volume
-  labels:
-    type: local
-spec:
-  storageClassName: manual
-  capacity:
-    storage: 10Gi
-  accessModes:
-    - ReadWriteOnce
-  hostPath:
-    path: "/mnt/data"
+## Test If the Secret Was Injected
+
+Check the pod's logs:
+
+```bash
+kubectl logs secret-demo
 ```
-## ii. *PersistentVolumeClaim (PVC)*
-+ A PersistentVolumeClaim (PVC) is a request for storage by a user. 
-+ Pods consume node resources and PVCs consume PV resources.
-+ While Pods can request specific levels of resources (CPU and Memory), Claims can request specific size and access modes (e.g., they can be mounted ReadWriteOnce, ReadOnlyMany, ReadWriteMany, or ReadWriteOncePod,)
+
+Expected output:
+
+```
+Connecting to DB with root@mysql
+Password: secret123
+```
+---
+
+## ❗ Security Notes
+
+* Kubernetes Secrets are **not encrypted at rest by default** — they are only base64-encoded.
+* Use Kubernetes encryption providers (e.g., KMS, Vault) to enable encryption at rest.
+* **Do NOT commit Secrets to GitHub.**
+
+---
+
+## Persistent Volume (PV) and Persistent Volume Claim (PVC)
+
+### 1. Persistent Volume (PV)
+
+**Definition**:
+A `PersistentVolume` is a piece of storage in the cluster provisioned by an admin or dynamically created by Kubernetes using a storage class (e.g., AWS EBS). It is a cluster resource.
+
+**Use Case**:
+Used when you want to manage storage independently from pods, allowing data persistence across pod restarts or rescheduling.
+
+**Note**:
+When using dynamic provisioning (like with EBS `gp3`), you don't need to create a PV manually — Kubernetes creates it automatically when you create a PVC.
+
+---
+
+### 2. Persistent Volume Claim (PVC)
+
+**Definition**:
+A `PersistentVolumeClaim` is a request for storage by a user. It specifies size, access mode, and storage class.
+
+**Use Case**:
+Used by pods to request storage without knowing the details of the underlying volume. It acts like an "interface" to access the PV.
+
+---
+
+### 3. Access Modes
+
+**Definition**:
+Access modes define how a volume can be mounted by pods.
+
+| Access Mode   | Description                            | Supported by AWS EBS |
+| ------------- | -------------------------------------- | -------------------- |
+| ReadWriteOnce | Mounted as read-write by a single node | Yes                  |
+| ReadOnlyMany  | Mounted as read-only by many nodes     | No                   |
+| ReadWriteMany | Mounted as read-write by many nodes    | No                   |
+
+**Explanation**:
+AWS EBS only supports **ReadWriteOnce**, which means:
+
+* Only one node can mount the volume at a time.
+* You can scale pods across replicas only if each pod mounts a different volume.
+
+---
+
+### 4. Example: PVC and Deployment Using AWS EBS (`gp3`)
+
+#### Step 1: Create a PVC
+
 ```yaml
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: task-pv-claim
+  name: ebs-pvc
 spec:
-  storageClassName: manual
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 3Gi
+      storage: 5Gi
+  storageClassName: gp3
 ```
+
+This tells Kubernetes to dynamically create a 5Gi EBS volume using the `gp3` storage class and bind it to this claim.
+
+---
+
+#### Step 2: Create a Deployment that Mounts the PVC
+
 ```yaml
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: task-pv-pod
+  name: nginx-ebs-deployment
 spec:
-  volumes:
-    - name: task-pv-storage
-      persistentVolumeClaim:
-        claimName: task-pv-claim
-  containers:
-    - name: task-pv-container
-      image: nginx
-      ports:
-        - containerPort: 80
-          name: "http-server"
-      volumeMounts:
-        - mountPath: "/usr/share/nginx/html"
-          name: task-pv-storage
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-ebs
+  template:
+    metadata:
+      labels:
+        app: nginx-ebs
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        volumeMounts:
+        - name: ebs-storage
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: ebs-storage
+        persistentVolumeClaim:
+          claimName: ebs-pvc
 ```
+
+**Explanation**:
+
+* The deployment runs an `nginx` container.
+* The container mounts the EBS volume at `/usr/share/nginx/html`.
+* If the pod is deleted and recreated, the data in the volume remains.
+
+---
+
+### 5. Summary
+
+* Use **PVCs** to request storage in a standardized way.
+* Kubernetes automatically provisions an **EBS volume** via dynamic provisioning using `gp3`.
+* **Access modes** define how the volume can be shared.
+* AWS EBS supports only **ReadWriteOnce** — one node at a time can access the volume in read/write mode.
+* This approach is ideal for **stateful applications** like databases and CMSs.
+
+---
+
 ## Volume Lifecycle:
 The reclaim policy for a PersistentVolume tells the cluster what to do with the volume after it has been released of its claim
 + Recycle
@@ -1315,22 +1995,34 @@ The reclaim policy for a PersistentVolume tells the cluster what to do with the 
 
 ### NAMESPACES:
 
-  A namespace is simply a distinct working area in k8s where a defined set of resources rules and users can  
-  be assigned to a namespace. 
-- By default, a k8s cluster comes with a default namespace. Here, a user can provision resources.
-- the subsystem namespace is also created by default for a set of pods and services for its functioning.
-- The kubepublic is also created to host resources that are made available to the public.
-- Within a cluster, you can create different namespaces for different projects and allocate resources to that namespace.
-- Resources from the same namespaces can refer to each other by their names,
-- they can also communicate with resources from another namespace by their names and append their namespace.
-eg msql.connect("db-service.dev.svc.cluster.local")
-```sh
-kubectl get pods > will list only pods in the default namespace
-kubectl get pods --namespace=kubesystem
 
+# Kubernetes Namespaces: Definition, Use Case, and Cross-Namespace Demo
+
+---
+
+##  What Are Kubernetes Namespaces?
+
+A **namespace** in Kubernetes is a virtual cluster within a physical cluster. Namespaces allow you to organize and manage resources in logically isolated groups.
+
+By default, Kubernetes comes with the `default`, `kube-system`, `kube-public`, and `kube-node-lease` namespaces.
+
+---
+
+## Why Use Namespaces?
+
+Namespaces are useful when you want to:
+
+| Use Case                     | Benefit                                                        |
+|-----------------------------|----------------------------------------------------------------|
+| **Environment separation**   | Keep `dev`, `staging`, and `prod` resources logically isolated |
+| **Team isolation**           | Give different teams (`frontend`, `backend`) their own space   |
+| **Security boundaries**      | Apply RBAC rules specific to users per namespace               |
+| **Resource quotas**          | Prevent noisy-neighbor problems by limiting per-namespace usage|
+| **Multi-tenancy**            | Run workloads from different clients or applications securely  |
+
+---
 kubectl apply -f <filename>  ==> will create object in the default namespace
 kubectl create -f <filename> --namespace=kubesystem  ==> will create object in the kubesystem namespace
-```
 
 ### Context
 A **context** 
@@ -1356,103 +2048,269 @@ A **context**
   ```sh
   kubectl config use-context <context-name>
   ```
+## Demo: Create and Use Two Namespaces (`finance` & `devops`)
 
-### Namespace
-A **namespace** 
-+ is a way to divide cluster resources between multiple users via virtual clusters. Namespaces provide a mechanism for isolating groups of resources within a single cluster.
-+ They are especially useful in larger environments where teams or projects need their own spaces for resources.
+We will:
+- Create two namespaces
+- Deploy an app in each namespace
+- Verify isolation
+- Demonstrate **cross-namespace access** using DNS
 
-**Key points about namespaces:**
-- Namespaces are a way to organize and isolate resources within a cluster.
-- Namespaces do not provide complete isolation; they are intended for logical separation rather than security.
-- Each resource created in Kubernetes belongs to a namespace, except for cluster-wide resources (like nodes and persistent volumes) which are not namespaced.
+---
 
-**Commands to manage namespaces:**
-- List all namespaces:
-  ```sh
-  kubectl get namespaces
-  ```
-- Create a new namespace:
-  ```sh
-  kubectl create namespace <namespace-name>
-  ```
-- Set the default namespace for the current context:
-  ```sh
-  kubectl config set-context --current --namespace=<namespace-name>
-  ```
+##  Step 1: Create the Namespaces
 
-### Example
-Consider a scenario where you have two contexts defined in your kubeconfig:
-- `dev-context` pointing to the development cluster with namespace `development`.
-- `prod-context` pointing to the production cluster with namespace `production`.
+```bash
+kubectl create namespace finance
+kubectl create namespace devops
+````
+---
 
-Switching contexts changes both the cluster and namespace:
-```sh
-kubectl config use-context dev-context
-kubectl config use-context prod-context
-```
+##  Step 2: Deploy an App in Each Namespace
 
-Setting a namespace within a context only changes the namespace for that context:
-```sh
-kubectl config set-context --current --namespace=staging
-```
-
- [Kubernetes official documentation on using contexts](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/#context).
-
-To ensure that your resources are always created in a specific namespace, add the namespace block in the resources
-definition file
-```yaml
-apiVersion: v1
-Kind: Service
-metadata: 
-  name: backend
-  namespace: dev  # This resource will always be created in the dev namespace, and will create the ns if it didn't exist
-spec:
-  type: LoadBalancer
-  ports:
-    - targetPort: 80  # (port on Pod). it will assume port if not specified
-      port: 80 # port on service. this is a mandatory field
-  selector:
-    app: myapp # This is the label that was used in the deployment metadata section
-    type: backend
-```
+###  `finance-pod.yaml`
 
 ```yaml
 apiVersion: v1
-Kind: NameSpace
+kind: Pod
 metadata:
-  name: dev
+  name: finance-api
+  namespace: finance
+  labels:
+    app: finance-api
+spec:
+  containers:
+    - name: app
+      image: hashicorp/http-echo
+      args:
+        - "-text=Hello from Finance"
+      ports:
+        - containerPort: 5678
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: finance-service
+  namespace: finance
+spec:
+  selector:
+    app: finance-api
+  ports:
+    - port: 80
+      targetPort: 5678
 ```
-OR 
- kubectl create namespace dev
- kubectl get ns 
 
-to set a namespace as the default namespace so that you don't always have to pass the NameSpace command, you need to set
-set the namespace in the current context
+```bash
+kubectl apply -f finance-pod.yaml
+```
 
-kubectl config set-context $(kubectl config current-context) --namespace=dev
-contexts are used to manage all resources in clusters from a single system 
+---
 
-To view resources in all NameSpaces use the 
-kubectl get pods --all-namespaces
+###  `devops-pod.yaml`
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: devops-api
+  namespace: devops
+  labels:
+    app: devops-api
+spec:
+  containers:
+    - name: app
+      image: hashicorp/http-echo
+      args:
+        - "-text=Hello from DevOps"
+      ports:
+        - containerPort: 5678
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: devops-service
+  namespace: devops
+spec:
+  selector:
+    app: devops-api
+  ports:
+    - port: 80
+      targetPort: 5678
+```
+
+```bash
+kubectl apply -f devops-pod.yaml
+```
+
+---
+
+## Step 3: Verify Isolation
+
+```bash
+kubectl get pods -n finance
+kubectl get pods -n devops
+```
+
+Try to reference a `Secret`, `Pod`, or `Service` from another namespace — it will **not work unless fully qualified**.
+
+---
+
+##  Step 4: Access a Service Across Namespaces (Using DNS)
+
+### Exec into the devops pod:
+
+```bash
+kubectl exec -it devops-api -n devops -- sh
+```
+
+### Inside the container:
+
+```sh
+wget -qO- http://finance-service.finance.svc.cluster.local
+```
+
+ You’ll get: `Hello from Finance`
+
+---
+
+## Step 5: Attempt Invalid Cross-Namespace Access
+
+Try accessing a ConfigMap or Secret from `finance` inside `devops`:
+
+```bash
+kubectl get secrets -n finance
+kubectl get secrets -n devops
+```
+
+You’ll notice:
+
+* Secrets/ConfigMaps are **namespace-scoped**
+* They must be duplicated across namespaces if needed
+
+---
+
+##  DNS Format for Cross-Namespace Services
+
+```
+http://<service-name>.<namespace>.svc.cluster.local
+```
+
+---
+
+##  Best Practices and Logical Uses
+
+| Namespace Design Pattern | Description                                       |
+| ------------------------ | ------------------------------------------------- |
+| `team-env`               | e.g., `frontend-dev`, `backend-prod`              |
+| `client-name`            | e.g., `tenant-a`, `tenant-b` for multi-tenancy    |
+| `feature-branch`         | e.g., `feature-login-refactor` for temporary test |
+
+### Recommendations:
+
+* Use namespaces in **RBAC** to scope permissions.
+* Use **ResourceQuotas** to cap CPU/memory usage per team.
+* Avoid clutter: don’t use namespaces as folders for every small app — use them meaningfully.
+
+---
+
+##  Summary
+
+Namespaces are critical for:
+
+* Organizing workloads
+* Providing logical separation
+* Securing workloads with RBAC
+* Supporting complex workflows and multi-user environments
+
+---
+
 
 ### Resource Quota:
-To set a limit for resources in a namespace, create a resource-quota object in
+
+A `ResourceQuota` is used to **limit resource consumption** per namespace. It helps control how many resources (pods, CPU, memory, etc.) a team or project can use in a shared cluster.
+
+###  **Common ResourceQuota Types**
+
+#### 1. **Limit by Pod Count Only**
+
+Limits how many pods can be created in the namespace.
+
 ```yaml
 apiVersion: v1
-Kind: ResourceQuota
+kind: ResourceQuota
 metadata:
-  name: compute-quota
+  name: pod-limit
   namespace: dev
 spec:
   hard:
     pods: "10"
-    requests.cpu: "4"
-    requests.memory: 5Gi
-    limits.cpu: "10"
-    limits.memory: 10Gi
 ```
-kubectl apply -f <filename>
+
+---
+
+####  2. **Limit by Memory and CPU Requests Only**
+
+Controls guaranteed minimum resource usage.
+
+```yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: compute-requests
+  namespace: dev
+spec:
+  hard:
+    requests.cpu: "2"
+    requests.memory: 4Gi
+```
+
+---
+
+####  3. **Limit by CPU and Memory Limits Only**
+
+Controls the maximum resources pods are allowed to consume.
+
+```yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: compute-limits
+  namespace: dev
+spec:
+  hard:
+    limits.cpu: "4"
+    limits.memory: 6Gi
+```
+
+---
+
+#### 4. **Combined ResourceQuota: Pods + CPU + Memory**
+
+Controls pod count and both requested and maximum resource usage.
+
+```yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: full-quota
+  namespace: dev
+spec:
+  hard:
+    pods: "10"
+    requests.cpu: "2"
+    requests.memory: 3Gi
+    limits.cpu: "4"
+    limits.memory: 5Gi
+```
+
+###  Notes:
+
+* `requests` = guaranteed minimum the pod needs.
+* `limits` = maximum the pod is allowed to use.
+* Applies **per namespace**.
+* Helps avoid resource starvation in multi-team clusters.
+
+---
 
 ### Declarative and Imperative :
   these are different approaches to creating and managing infrastructure in IaC.
@@ -1513,6 +2371,87 @@ spec:
      name: nginx
   nodeName: controlplane
 ```
+---
+
+## Node Affinity in Kubernetes (EKS)
+
+**Node Affinity** lets you control **which nodes your pod can be scheduled on**, based on node labels. It’s preferred over `nodeSelector` because it's more flexible and expressive.
+
+###  Types of Node Affinity
+
+1. **requiredDuringSchedulingIgnoredDuringExecution**
+
+   * **Hard rule**: Pod *must* be scheduled on a node that matches.
+2. **preferredDuringSchedulingIgnoredDuringExecution**
+
+   * **Soft rule**: Scheduler will try to match, but can ignore it if no suitable node exists.
+
+---
+
+### Example: Schedule pod on nodes in `us-east-1a`
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: topology.kubernetes.io/zone
+            operator: In
+            values:
+            - us-east-1a
+```
+
+ In EKS, nodes are **automatically labeled** with their zone using:
+
+```bash
+topology.kubernetes.io/zone=<az>
+```
+
+---
+
+##  Node Anti-Affinity
+
+**Node Anti-Affinity** prevents pods from being scheduled on the **same node** with other pods matching specific labels.
+
+---
+
+###  Example: Avoid placing pod on a node with pods labeled `app=nginx`
+
+```yaml
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+    - labelSelector:
+        matchExpressions:
+        - key: app
+          operator: In
+          values:
+          - nginx
+      topologyKey: "kubernetes.io/hostname"
+```
+
+ `topologyKey: kubernetes.io/hostname` ensures the pod avoids the **same node**.
+You can also use `topology.kubernetes.io/zone` to spread pods across **AZs**.
+
+---
+
+##  Summary
+
+| Type               | Purpose                           | Key Fields                                    |
+| ------------------ | --------------------------------- | --------------------------------------------- |
+| Node Affinity      | Schedule pods on specific nodes   | `nodeAffinity` → `required` or `preferred`    |
+| Node Anti-Affinity | Avoid certain pods sharing a node | `podAntiAffinity` → `required` or `preferred` |
+
+
 ## RESOURCE REQUIREMENTS:
 
 - every pod requires a set of resources to run.
@@ -1558,39 +2497,114 @@ ResourceQuota can also be used to set resource limits at the level of the NameSp
 ## QUALITY OF SERVICE IN KUBERNETES:
 
 Kubernetes offers three levels of Quality of Service:
+Here are concise notes and examples on **Kubernetes Quality of Service (QoS)** classes:
 
-+ 1. **BestEffort:**
-   - Pods with BestEffort QoS are not guaranteed any specific amount of resources.
-   - They are scheduled onto nodes based on availability, and they can use whatever resources are available at that time.
-   - These pods are the first to be evicted if resources become scarce.
+---
+###  **Kubernetes QoS Classes Overview**
 
-+ 2. **Burstable:**
-   - Pods with Burstable QoS are guaranteed a minimum amount of CPU and memory.
-   - These pods can burst beyond their guaranteed minimum if the resources are available.
-   - If other pods on the node need resources, Burstable QoS pods might be limited in their burst capacity.
+Kubernetes uses **QoS classes** to manage pod scheduling and resource allocation. QoS is determined based on how you set **CPU/memory resource requests and limits** in the Pod spec.
 
-+ 3. **Guaranteed:**
-   - Pods with Guaranteed QoS are guaranteed a specific amount of CPU and memory.
-   - These pods are not allowed to exceed the resources they have been allocated.
-   - Kubernetes tries to ensure that nodes have enough available resources to meet the guaranteed requirements.
+---
 
-Kubernetes determines the QoS level of pods based on the resource requests and limits specified in the pod's configuration:
+### 1. **BestEffort**
 
-- **Resource Requests:** The minimum amount of resources a pod requires to run. 
-    These requests are used by the scheduler to make placement decisions.
-- **Resource Limits:** The maximum amount of resources a pod is allowed to use.
-    Exceeding these limits could lead to throttling or pod termination.
+* **Description**:
 
-Kubernetes uses the relationship between requests and limits to categorize pods into different QoS classes. 
-The actual QoS class assigned to a pod depends on how its requests and limits are set:
+  * No CPU or memory *requests* or *limits* set.
+  * Lowest priority; first to be evicted under resource pressure.
+* **Use Case**: Non-critical, test, or batch workloads.
+
+**Example:**
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: besteffort-pod
+spec:
+  containers:
+    - name: busybox
+      image: busybox
+      command: ["sleep", "3600"]
+```
+
+---
+
+### 2. **Burstable**
+
+* **Description**:
+
+  * CPU or memory *request* is set, but *limit* is not, or limit > request.
+  * Can burst beyond the requested amount if resources are free.
+  * Medium eviction priority.
+* **Use Case**: Moderate importance workloads that can share resources.
+
+** Example:**
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: burstable-pod
+spec:
+  containers:
+    - name: nginx
+      image: nginx
+      resources:
+        requests:
+          memory: "128Mi"
+          cpu: "250m"
+        limits:
+          memory: "256Mi"
+          cpu: "500m"
+```
+
+---
+
+### 3. **Guaranteed**
+
+* **Description**:
+
+  * *Both* CPU and memory requests **equal** limits.
+  * Highest priority; least likely to be evicted.
+* **Use Case**: Critical or production-grade workloads.
+
+** Example:**
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: guaranteed-pod
+spec:
+  containers:
+    - name: redis
+      image: redis
+      resources:
+        requests:
+          memory: "256Mi"
+          cpu: "500m"
+        limits:
+          memory: "256Mi"
+          cpu: "500m"
+```
+
+---
+
+### Summary Table
+
+| **QoS Class** | **Requests** | **Limits** | **Eviction Priority** |
+| ------------- | ------------ | ---------- | --------------------- |
+| BestEffort    | Not set      | Not set    | Lowest                |
+| Burstable     | Set          | Optional   | Medium                |
+| Guaranteed    | = Limits     | = Requests | Highest               |
+
+---
 
 - **BestEffort:** Pods with no resource requests or limits.
 - **Burstable:** Pods with resource requests, but without memory limits or with memory limits lower than their requests.
 - **Guaranteed:** Pods with both CPU and memory limits set to be higher than or equal to their resource requests.
 
-Setting appropriate resource requests and limits for pods is crucial for efficient resource allocation and QoS management 
-within a Kubernetes cluster. Properly configured QoS levels help ensure that critical workloads are prioritized 
-and that the cluster operates smoothly without resource contention issues.
 
 ## STATIC PODS:
 
@@ -1668,241 +2682,419 @@ Security in Kubernetes is mainly in the area of
 
 ![4c](https://github.com/CHAFAH/DevOps_Setup/assets/125821852/eee2926b-6e4a-4e4a-ba70-36b6c2cc4fff)
 
- ## Authentication (Login)
-+ All Kubernetes clusters have two categories of users: service accounts managed by Kubernetes, and normal users.
-+ You can authenticate into the cluster by either
-```sh
-kubectl create ns dev
-kubectl create sa development --ns dev
-kubectl create role dev --ns dev
-kubectl create roleBinding dev --role=dev --serviceAccount=development:dev
-```
 
-## HOW TO ISSUE A CERTIFICATE TO A USER IN THE CLUSTER:
-+ A few steps are required to get a normal user to be able to authenticate and invoke an API. 
-+ First, this user must have a certificate issued by the Kubernetes cluster, and then present that certificate to the Kubernetes API.
-
-### 1. Create private key
-The following scripts show how to generate PKI private key and CSR. It is important to set CN and O attributes of the CSR.
- CN is the name of the user and O is the group that this user will belong to. You can refer to RBAC for standard groups.
-```sh
-openssl genrsa -out prince.key 2048
-touch /root/.rnd
-chmod 600 /root/.rnd
-openssl req -new -key prince.key -out prince.csr -subj "/CN=prince"
-```
-### 2. Create a CertificateSigningRequest
-+ Create a CertificateSigningRequest and submit it to a Kubernetes Cluster via kubectl. Below is a script to generate the CertificateSigningRequest.
-```sh
-cat <<EOF | kubectl apply -f -
-apiVersion: certificates.k8s.io/v1
-kind: CertificateSigningRequest
-metadata:
-  name: prince
-spec:
-  request: #(base64 encoded value of the CSR file content)
-  signerName: kubernetes.io/kube-apiserver-client
-  expirationSeconds: 86400  # one day
-  usages:
-  - client auth
-EOF
-```
-#Some points to note:
-
-+ usages has to be 'client auth'
-
-+ expirationSeconds could be made longer (i.e. 864000 for ten days) or shorter (i.e. 3600 for one hour)
-
-+ request is the base64 encoded value of the CSR file content. You can get the content using this command:
-```sh
-cat prince.csr | base64 | tr -d "\n"
-```
-### 3. Approve the CertificateSigningRequest
-+ Use kubectl to create a CSR and approve it.
-
-+ Get the list of CSRs:
-```sh
-kubectl get csr
-```
-### 4. Approve the CSR:
-```sh
-kubectl certificate approve prince
-```
-### 5. Get the certificate
-
-+ Retrieve the certificate from the CSR:
-```sh
-kubectl get csr/prince -o yaml
-```
-+ The certificate value is in Base64-encoded format under status.certificate.
-
-### 6. Export the issued certificate from the CertificateSigningRequest.
-```sh
-kubectl get csr prince -o jsonpath='{.status.certificate}'| base64 -d > prince.crt
-```
+---
 
 
-### 7. Create Role and RoleBinding
-+ With the certificate created it is time to define the Role and RoleBinding for this user to access Kubernetes cluster resources.
+This guide explains how to authenticate and authorize users to an Amazon EKS cluster using **IAM users** with **access keys**, the **aws-auth ConfigMap**, and **Kubernetes RBAC**.
 
-+ This is a sample command to create a Role for this new user:
-```sh
-cat <<EOF | kubectl apply -f -
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  namespace: devops
-  name: devops-role
-rules:
-- apiGroups: [""]
-  resources: ["pods", "deployment" "secrets" "services"]
-  verbs: ["get", "list", "watch"]
-EOF
-```
-+ This is a sample command to create a RoleBinding for this new user:
-```sh
-cat <<EOF | kubectl apply -f -
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: devops-role-binding
-  namespace: devops
-subjects:
-- kind: User
-  name: prince
-  apiGroup: rbac.authorization.k8s.io
-roleRef:
-  kind: Role
-  name: devops-role
-  apiGroup: rbac.authorization.k8s.io
-EOF
-```
-### 8. Add to kubeconfig
-+ The last step is to add this user into the kubeconfig file.
+---
 
-+ First, you need to add new credentials:
-```sh
-kubectl config set-credentials prince --client-key=prince.key --client-certificate=prince.crt --embed-certs=true
-```
-### 9. Then, you need to add the context:
-```sh
-kubectl config set-context prince --cluster=kubernetes --user=prince
-```
-+ To test it, change the context to prince:
-```sh
-kubectl config use-context prince
-```
-+ See the current context
-```sh
-kubectl config current-context
-```
-```sh
-kubectl auth can-i list pods --namespace devops
-```
-+ If you install Kubernetes with kubeadm, most certificates are stored in `/etc/kubernetes/pki`.
-  https://kubernetes.io/docs/setup/best-practices/certificates/
-+ [You can manage Kubeadm certificates here](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/)
-  
- ## Authorization
- + After being authenticated into a k8s cluster, all API requests made by an authenticated user in the cluster must be authorized by the API server against all objects and processes
- + Permissions in the cluster to make API calls are denied by default
- + The API request attributes being authorized are either the user, group, resource, verb, namespace path, etc
- + 
-### Authorization Modes
-## 1. [Attribut Based Access Control ABAC](https://kubernetes.io/docs/reference/access-authn-authz/abac/)
-+ Rights are granted to users through the use of policies that combine attributes.
-+ The policies can use any type of attribute (user, resource, object, environment, etc)
-+ Examples
-+ Mysuer can do anything to all resources:
-```sh
-{"apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": {"user": "prince", "namespace": "*", "resource": "*", "apiGroup": "*"}}
-```
-+ Bob can just read pods in namespace "projectCaribou":
-```sh
-{"apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": {"user": "prince", "namespace": "projectCaribou", "resource": "pods", "readonly": true}}
-```
-## 2. [Role Based Access Control RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
+## Overview
 
-+ This is a way of authorization where users in the cluster are permitted to perform actions based on their role in the company
-+ This generally follows the principles of least privilege
-+ To enable RBAC, start the apiserver with --authorization-mode=RBAC.
-+ The RBAC permissions are granted in the form of Roles and ClsuterRoles which are additive i.e, there is not deny
-+ A Role always sets permissions within a particular namespace; when you create a Role, you have to specify the namespace it belongs in.
-+ ClusterRole, by contrast, is a non-namespaced resource.
-+ A RoleBinding or ClusterRoleBinding is used to attach the ClusterRole or Role to the new user.
+- **Authentication**: Handled by AWS IAM (using access keys).
+- **Authorization**: Handled by EKS's `aws-auth` ConfigMap and Kubernetes RBAC.
+- **Goal**: Grant a user read-only access to pods and services in the cluster.
 
-## *Role and RoleBinding Example:*
-+ A role gives a user access to API Resources within a specific namespace
-```sh
-cat <<EOF | kubectl apply -f -
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  namespace: dev
-  name: pod-reader
-rules:
-- apiGroups: [""] # "" indicates the core API group
-  resources: ["pods"]
-  verbs: ["get", "watch", "list"]
-EOF
+---
+
+##  Prerequisites
+
+- An existing EKS cluster with `aws-auth` ConfigMap access enabled.
+- AWS CLI and `kubectl` configured on your local machine.
+- IAM permissions to edit the `aws-auth` ConfigMap and apply RBAC resources.
+
+---
+
+##  Step-by-Step Guide
+
+---
+
+### Step 1: Create an IAM User with Access Keys
+
+1. Go to **IAM > Users > Add user**
+2. User name: `dev-alice`
+3. Select **Programmatic access**
+4. Finish creation and **save the Access Key ID and Secret Access Key**
+
+---
+
+### Step 2: Attach IAM Policy for `eks:DescribeCluster`
+
+This allows the IAM user to fetch cluster info when using `kubectl`.
+
+#### Policy JSON:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": "eks:DescribeCluster",
+    "Resource": "*"
+  }]
+}
+````
+
+#### How to attach:
+
+* Go to **IAM > Users > dev-alice > Permissions**
+* Click **Add permissions**
+* Choose **Attach policies directly**
+* Click **Create inline policy**
+* Paste the above JSON
+* Name the policy `EKSDescribeClusterAccess` and attach it
+
+---
+
+### Step 3: Add IAM User to the `aws-auth` ConfigMap
+
+On your admin machine:
+
+```bash
+kubectl edit configmap aws-auth -n kube-system
 ```
 
-+ This role binding allows "prince" to read pods in the "default" namespace.
-+ You need to already have a Role named "pod-reader" in that namespace.
-```sh
-cat <<EOF | kubectl apply -f -
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: read-pods
-  namespace: dev
-subjects:
-# You can specify more than one "subject"
-- kind: User
-  name: prince # "name" is case sensitive
-  apiGroup: rbac.authorization.k8s.io
-roleRef:
-  # "roleRef" specifies the binding to a Role / ClusterRole
-  kind: Role #this must be Role or ClusterRole
-  name: pod-reader # This must match the name of the Role or ClusterRole you wish to bind to
-  apiGroup: rbac.authorization.k8s.io
+Add this under `mapUsers`:
+
+```yaml
+mapUsers:
+  - userarn: arn:aws:iam::<account-id>:user/dev-alice
+    username: dev-alice
+    groups:
+      - eks-viewers
 ```
 
-## *ClusterRole and ClusterRoleBinding Example:*
-+ A Cluster role grants a user access to peform specific functions with the entire cluser.
-+ Even though they are action bound, they are not namespace bound
-  
-```sh
-cat <<EOF | kubectl apply -f -
+> Replace `<account-id>` with your actual AWS account ID.
+
+---
+
+### Step 4: Create RBAC Role and Binding for `eks-viewers`
+
+Save this to `viewer-role.yaml`:
+
+```yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  # "namespace" omitted since ClusterRoles are not namespaced
-  name: secret-reader
+  name: viewer-role
 rules:
 - apiGroups: [""]
-  #
-  # at the HTTP level, the name of the resource for accessing Secret
-  # objects is "secrets"
-  resources: ["secrets"]
-  verbs: ["get", "watch", "list"]
-```
-```sh
-cat <<EOF | kubectl apply -f -
+  resources: ["pods", "services"]
+  verbs: ["get", "list"]
+---
 apiVersion: rbac.authorization.k8s.io/v1
-# This cluster role binding allows anyone in the "manager" group to read secrets in any namespace.
 kind: ClusterRoleBinding
 metadata:
-  name: read-secrets-global
+  name: bind-viewers
 subjects:
 - kind: Group
-  name: manager # Name is case sensitive
+  name: eks-viewers
   apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: ClusterRole
-  name: secret-reader
+  name: viewer-role
   apiGroup: rbac.authorization.k8s.io
 ```
+
+Apply the RBAC config:
+
+```bash
+kubectl apply -f viewer-role.yaml
+```
+
+---
+
+### Step 5: Configure AWS CLI as the IAM User
+
+On Alice’s machine:
+
+```bash
+aws configure --profile alice
+```
+
+Enter:
+
+* Access Key
+* Secret Key
+* Region (e.g., `eu-west-1`)
+* Output format (e.g., `json`)
+
+---
+
+### Step 6: Connect to the Cluster
+
+```bash
+aws eks update-kubeconfig --name <your-cluster-name> --region <region> --profile alice
+```
+
+Test access:
+
+```bash
+kubectl get pods        # ✅ Should work
+kubectl delete pod xyz  # ❌ Should be forbidden
+```
+
+
+---
+# OPTION 2
+
+
+1. `EKSAdmin`
+2. `EKSDeveloper`
+3. `EKSViewer`
+
+# Amazon EKS Authentication & Authorization – Method 2: IAM Identity Center Access Portal
+
+This guide explains how to authenticate and authorize users to an Amazon EKS cluster using **IAM Identity Center (Access Portal)**, **permission sets**, and **Kubernetes RBAC**.
+
+---
+
+## Overview
+
+- **Authentication**: Handled by IAM Identity Center (via Access Portal and `aws sso login`)
+- **Authorization**: IAM Identity Center Permission Sets + Kubernetes RBAC
+- **Goal**: Grant users varying access to the EKS cluster via predefined permission sets:
+  - `EKSAdmin`: Full cluster admin
+  - `EKSDeveloper`: Read/write access to workloads
+  - `EKSViewer`: Read-only access to workloads
+
+---
+
+## Prerequisites
+
+- An existing EKS cluster with both API & ConfigMap access enabled
+- IAM Identity Center set up and enabled
+- AWS CLI v2 and `kubectl` installed
+- User has access to the AWS Access Portal
+
+---
+
+## Step-by-Step Guide
+
+---
+
+### Step 1: Enable IAM Identity Center (if not yet done)
+
+1. Go to the AWS Console
+2. Search for **IAM Identity Center** > **Enable**
+3. Choose the default directory or integrate with your IdP (Okta, Azure AD, etc.)
+4. Create Users and Groups (e.g., `eks-admins`, `eks-developers`, `eks-viewers`)
+
+---
+
+### Step 2: Create Permission Sets
+
+Go to **IAM Identity Center > Permission Sets > Create permission set**
+
+#### 1 EKSAdmin (full access)
+
+- **Name**: `EKSAdmin`
+- **Type**: Custom
+- **Policy**: Attach `AdministratorAccess` (AWS managed)
+
+#### 2 EKSDeveloper
+
+- **Name**: `EKSDeveloper`
+- **Type**: Custom
+- **Attach AWS managed policies**:
+  - `AmazonEKSFullAccess`
+  - `AmazonEC2ReadOnlyAccess`
+- **(Optional)** Add inline policy for IAM listing/logs:
+
+```json
+{
+  "Effect": "Allow",
+  "Action": [
+    "iam:ListRoles",
+    "iam:GetRole",
+    "logs:Describe*",
+    "logs:Get*",
+    "logs:List*"
+  ],
+  "Resource": "*"
+}
+````
+
+#### 3 EKSViewer (read-only)
+
+* **Name**: `EKSViewer`
+* **Type**: Custom
+* **Inline policy**:
+
+```json
+{
+  "Effect": "Allow",
+  "Action": [
+    "eks:Describe*",
+    "eks:List*",
+    "ec2:Describe*",
+    "logs:Get*",
+    "logs:Describe*"
+  ],
+  "Resource": "*"
+}
+```
+
+---
+
+### Step 3: Assign Groups to AWS Account
+
+Go to **IAM Identity Center > AWS Accounts > Assign users or groups**:
+
+| Group            | Permission Set |
+| ---------------- | -------------- |
+| `eks-admins`     | `EKSAdmin`     |
+| `eks-developers` | `EKSDeveloper` |
+| `eks-viewers`    | `EKSViewer`    |
+
+---
+
+### Step 4: Map IAM Roles in `aws-auth` ConfigMap
+
+Each permission set creates a unique IAM role like:
+
+```
+arn:aws:iam::<account-id>:role/AWSReservedSSO_<PermissionSetName>_<UUID>
+```
+
+Run:
+
+```bash
+kubectl edit configmap aws-auth -n kube-system
+```
+
+Add under `mapRoles`:
+
+```yaml
+mapRoles:
+  - rolearn: arn:aws:iam::<account-id>:role/AWSReservedSSO_EKSAdmin_<UUID>
+    username: eks-admin
+    groups:
+      - system:masters
+
+  - rolearn: arn:aws:iam::<account-id>:role/AWSReservedSSO_EKSDeveloper_<UUID>
+    username: eks-developer
+    groups:
+      - eks-developers
+
+  - rolearn: arn:aws:iam::<account-id>:role/AWSReservedSSO_EKSViewer_<UUID>
+    username: eks-viewer
+    groups:
+      - eks-viewers
+```
+
+---
+
+### Step 5: Create Kubernetes RBAC Roles and Bindings
+
+#### `eks-developers`
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dev-role
+rules:
+- apiGroups: ["", "apps"]
+  resources: ["pods", "services", "deployments"]
+  verbs: ["get", "list", "create", "update", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: bind-developers
+subjects:
+- kind: Group
+  name: eks-developers
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: dev-role
+  apiGroup: rbac.authorization.k8s.io
+```
+
+#### `eks-viewers`
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: view-role
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: bind-viewers
+subjects:
+- kind: Group
+  name: eks-viewers
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: view-role
+  apiGroup: rbac.authorization.k8s.io
+```
+
+Apply both:
+
+```bash
+kubectl apply -f dev-role.yaml
+kubectl apply -f view-role.yaml
+```
+
+> `system:masters` group (for `EKSAdmin`) gives full access – no RBAC needed.
+
+---
+
+### Step 6: User Access & `kubectl` Setup
+
+#### 1. User logs into [AWS Access Portal](https://<your-sso-url>.awsapps.com/start)
+
+#### 2. Select account and permission set
+
+#### 3. On local machine, run:
+
+```bash
+aws configure sso
+aws sso login --profile eks-user
+aws eks update-kubeconfig --region <region> --name <cluster-name> --profile eks-user
+```
+
+Then test:
+
+```bash
+kubectl auth can-i create pods       # Developer: ✅, Viewer: ❌
+kubectl get pods                     # All roles: ✅
+kubectl delete pod xyz              # Admin & Developer: ✅, Viewer: ❌
+```
+
+---
+
+##  Summary
+
+| Role      | IAM Identity Center Permission Set | Group          | Kubernetes Group | Access Level                 |
+| --------- | ---------------------------------- | -------------- | ---------------- | ---------------------------- |
+| Admin     | EKSAdmin (`AdministratorAccess`)   | eks-admins     | `system:masters` | Full cluster access          |
+| Developer | EKSDeveloper                       | eks-developers | `eks-developers` | Create/update pods, services |
+| Viewer    | EKSViewer (inline policy)          | eks-viewers    | `eks-viewers`    | View pods/services only      |
+
+---
+
+## 🔒 Security Notes
+
+* Keep RBAC definitions in Git as code.
+* Use permission sets instead of unmanaged inline IAM policies where possible.
+* Periodically review access mappings in `aws-auth` and Identity Center.
+
+```
+
+---
+
 
 # NETWORKING:
   
